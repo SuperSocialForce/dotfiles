@@ -40,3 +40,4 @@ Temporary Items
 # stash files
 **/.netrwhist
 vim/undo/
+bash/.bashrc.local
