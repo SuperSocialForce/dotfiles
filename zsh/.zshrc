@@ -1,7 +1,7 @@
 export LANG="${LANG:-C.UTF-8}"
 export LC_CTYPE="${LC_CTYPE:-C.UTF-8}"
 
-export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/usr/local/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/.cargo/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:$PATH"
 export EDITOR=nvim
 export VISUAL=nvim
 
@@ -32,7 +32,7 @@ fi
 export LS_COLORS='di=01;34:ln=01;36:so=32:pi=33:ex=01;32:bd=46;34:cd=43;34:su=41;30:sg=46;30:tw=42;30:ow=43;30'
 
 # completion
-fpath=("$HOME/.zfunc" $fpath)
+fpath=(/opt/homebrew/share/zsh/site-functions "$HOME/.zfunc" $fpath)
 autoload -Uz compinit
 compinit -u
 setopt globdots
@@ -41,6 +41,8 @@ zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*:default' menu select=2
 zstyle ':completion:*' ignore-parents parent pwd ..
 zstyle ':completion:*' special-dirs true
+zstyle ':completion:*:*:docker:*' option-stacking yes
+zstyle ':completion:*:*:docker-*:*' option-stacking yes
 zmodload zsh/complist 2>/dev/null || true
 
 # operation
