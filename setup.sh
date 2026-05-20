@@ -6,7 +6,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 TIMESTAMP="$(date +%Y%m%d%H%M%S)"
 TMP_DIR="$(mktemp -d)"
 CURRENT_USER="${USER:-$(id -un)}"
-SUDO="sudo"
+SUDO=(sudo)
 
 cleanup() {
   rm -rf "$TMP_DIR"
@@ -28,7 +28,7 @@ die() {
 
 require_user_run() {
   if [[ "${EUID}" -eq 0 ]]; then
-    die "Run this script as your normal user, not with sudo. It will request sudo when needed."
+    die "Run this script as your normal user, not with sudo. It will use sudo when needed."
   fi
 }
 
@@ -48,16 +48,17 @@ require_ubuntu() {
 
 require_sudo() {
   command -v sudo >/dev/null 2>&1 || die "sudo is required."
-  info "Requesting sudo credentials for system package installation."
-  "$SUDO" -v
+
+  SUDO=(sudo -n)
+  info "Using non-interactive sudo for system package installation."
 }
 
 apt_update() {
-  "$SUDO" apt-get update
+  "${SUDO[@]}" apt-get update
 }
 
 apt_install() {
-  "$SUDO" DEBIAN_FRONTEND=noninteractive apt-get install -y "$@"
+  "${SUDO[@]}" DEBIAN_FRONTEND=noninteractive apt-get install -y "$@"
 }
 
 install_base_packages() {
@@ -68,7 +69,7 @@ install_base_packages() {
     curl \
     gnupg \
     software-properties-common
-  "$SUDO" add-apt-repository -y universe
+  "${SUDO[@]}" add-apt-repository -y universe
   apt_update
   apt_install \
     apt-transport-https \
@@ -155,13 +156,13 @@ install_python_cli_tools() {
 
 setup_github_cli_repo() {
   info "Configuring GitHub CLI apt repository."
-  "$SUDO" install -m 0755 -d /etc/apt/keyrings
+  "${SUDO[@]}" install -m 0755 -d /etc/apt/keyrings
   curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg \
-    | "$SUDO" tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
-  "$SUDO" chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
-  "$SUDO" install -m 0755 -d /etc/apt/sources.list.d
+    | "${SUDO[@]}" tee /etc/apt/keyrings/githubcli-archive-keyring.gpg >/dev/null
+  "${SUDO[@]}" chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg
+  "${SUDO[@]}" install -m 0755 -d /etc/apt/sources.list.d
   printf 'deb [arch=%s signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main\n' "$(dpkg --print-architecture)" \
-    | "$SUDO" tee /etc/apt/sources.list.d/github-cli.list >/dev/null
+    | "${SUDO[@]}" tee /etc/apt/sources.list.d/github-cli.list >/dev/null
 }
 
 setup_docker_repo() {
@@ -172,12 +173,12 @@ setup_docker_repo() {
   local codename="${UBUNTU_CODENAME:-${VERSION_CODENAME:-}}"
   [[ -n "$codename" ]] || die "Could not determine Ubuntu codename for Docker repository."
 
-  "$SUDO" install -m 0755 -d /etc/apt/keyrings
+  "${SUDO[@]}" install -m 0755 -d /etc/apt/keyrings
   curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-    | "$SUDO" tee /etc/apt/keyrings/docker.asc >/dev/null
-  "$SUDO" chmod a+r /etc/apt/keyrings/docker.asc
+    | "${SUDO[@]}" tee /etc/apt/keyrings/docker.asc >/dev/null
+  "${SUDO[@]}" chmod a+r /etc/apt/keyrings/docker.asc
 
-  cat <<EOF | "$SUDO" tee /etc/apt/sources.list.d/docker.sources >/dev/null
+  cat <<EOF | "${SUDO[@]}" tee /etc/apt/sources.list.d/docker.sources >/dev/null
 Types: deb
 URIs: https://download.docker.com/linux/ubuntu
 Suites: ${codename}
@@ -208,7 +209,7 @@ remove_docker_conflicts() {
 
   if ((${#installed[@]})); then
     info "Removing Docker packages that conflict with Docker CE: ${installed[*]}"
-    "$SUDO" DEBIAN_FRONTEND=noninteractive apt-get remove -y "${installed[@]}"
+    "${SUDO[@]}" DEBIAN_FRONTEND=noninteractive apt-get remove -y "${installed[@]}"
   fi
 }
 
@@ -228,7 +229,7 @@ install_repo_packages() {
     gh
 
   if getent group docker >/dev/null 2>&1; then
-    "$SUDO" usermod -aG docker "$CURRENT_USER"
+    "${SUDO[@]}" usermod -aG docker "$CURRENT_USER"
   fi
 }
 
@@ -265,13 +266,13 @@ install_neovim() {
 
   info "Installing latest stable Neovim from official release archive."
   curl -fL "$url" -o "$archive"
-  "$SUDO" rm -rf "$install_dir"
-  "$SUDO" tar -C /opt -xzf "$archive"
+  "${SUDO[@]}" rm -rf "$install_dir"
+  "${SUDO[@]}" tar -C /opt -xzf "$archive"
 
   if [[ -e /usr/local/bin/nvim && ! -L /usr/local/bin/nvim ]]; then
     warn "/usr/local/bin/nvim exists and is not a symlink; leaving it unchanged."
   else
-    "$SUDO" ln -sfn "$install_dir/bin/nvim" /usr/local/bin/nvim
+    "${SUDO[@]}" ln -sfn "$install_dir/bin/nvim" /usr/local/bin/nvim
   fi
 }
 
@@ -338,7 +339,7 @@ install_github_tar_binary() {
   [[ -n "$candidate" ]] || candidate="$(find "$workdir" -type f -name "$binary" -print -quit)"
   [[ -n "$candidate" ]] || die "Could not find ${binary} inside ${asset_url}."
 
-  "$SUDO" install -m 0755 "$candidate" "/usr/local/bin/$binary"
+  "${SUDO[@]}" install -m 0755 "$candidate" "/usr/local/bin/$binary"
 }
 
 install_lazygit_and_lazydocker() {
