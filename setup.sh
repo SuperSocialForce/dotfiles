@@ -72,6 +72,8 @@ install_base_packages() {
   apt_update
   apt_install \
     apt-transport-https \
+    bat \
+    bubblewrap \
     build-essential \
     ca-certificates \
     curl \
@@ -486,6 +488,15 @@ configure_fd_aliases() {
   fi
 }
 
+configure_bat_alias() {
+  local batcat_path
+
+  if command -v batcat >/dev/null 2>&1; then
+    batcat_path="$(command -v batcat)"
+    link_user_bin_alias bat "$batcat_path"
+  fi
+}
+
 link_dotfiles() {
   info "Linking dotfiles."
   link_file "zsh/.zshrc" "$HOME/.zshrc"
@@ -544,6 +555,8 @@ print_summary() {
   check_command "rg" rg
   check_command "fd" fd
   check_command "fdf" fdf
+  check_command "fzf" fzf
+  check_command "bat" bat
   check_command "zoxide" zoxide
   check_command "gh" gh
   check_command "glab" glab
@@ -551,6 +564,7 @@ print_summary() {
   check_command "docker" docker
   check_command "lazydocker" lazydocker
   check_command "codex" codex
+  check_command "bubblewrap" bwrap
   check_command "pyenv" pyenv
   check_command "pipx" pipx
   check_command "poetry" poetry
@@ -584,6 +598,7 @@ main() {
   install_python_cli_tools
   install_nvm_and_codex
   configure_fd_aliases
+  configure_bat_alias
   link_dotfiles
   install_neovim_config
   print_summary
