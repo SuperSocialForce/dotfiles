@@ -12,6 +12,7 @@ This is personal dotfiles project, which provide a way to complete setup process
 - bat
 - git
   - git-completion
+  - git lfs
 - github cli
 - glab
 - lazygit

@@ -83,6 +83,7 @@ install_base_packages() {
     fzf \
     gettext \
     git \
+    git-lfs \
     gnupg \
     gpg \
     imagemagick \
@@ -500,6 +501,7 @@ configure_bat_alias() {
 
 link_dotfiles() {
   info "Linking dotfiles."
+  link_file "bash/.bashrc" "$HOME/.bashrc"
   link_file "zsh/.zshrc" "$HOME/.zshrc"
   link_file "git/.gitconfig" "$HOME/.gitconfig"
   link_file "tmux/.tmux.conf" "$HOME/.tmux.conf"
@@ -551,6 +553,7 @@ print_summary() {
   printf '\nInstalled command check:\n'
   check_command "zsh" zsh
   check_command "git" git
+  check_command "git lfs" git-lfs
   check_command "tmux" tmux
   check_command "nvim" nvim
   check_command "rg" rg
